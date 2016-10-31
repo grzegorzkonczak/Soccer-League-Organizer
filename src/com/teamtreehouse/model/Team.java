@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class Team {
+public class Team implements Comparable<Team>{
 
 	public static final Integer MAX_PLAYERS = 11;
 	
@@ -48,6 +48,11 @@ public class Team {
 	public void removePlayer(Player player) {
 		players.remove(player);
 		
+	}
+
+	@Override
+	public int compareTo(Team other) {
+		return teamName.compareTo(other.teamName);
 	}
 	
 	

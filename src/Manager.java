@@ -2,9 +2,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.teamtreehouse.model.Player;
 import com.teamtreehouse.model.Season;
@@ -114,6 +117,7 @@ public class Manager {
 
 	// Prompts user to select player and add him to team
 	private Player promptForPlayer(List<Player> players) throws NumberFormatException, IOException {
+		Collections.sort(players);
 		System.out.println("\nAll players:");
 		int counter = 1;
 		for (Player player : players) {
@@ -128,7 +132,9 @@ public class Manager {
 	private Team promptForTeam() throws IOException {
 		System.out.println("\nAvailable teams:");
 		int counter = 1;
-		for (Team team : season.getTeams()) {
+		List<Team> teams = season.getTeams();
+		Collections.sort(teams);
+		for (Team team : teams) {
 			System.out.printf("%d.) %s%n", counter, team);
 			counter++;
 		}
