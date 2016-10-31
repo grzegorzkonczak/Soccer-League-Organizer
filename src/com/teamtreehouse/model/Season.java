@@ -19,12 +19,7 @@ public class Season {
 		return teams;
 	}
 
-	public Team getTeam(String teamName) {
-		for (Team team : teams) {
-			if (team.getTeamName().equals(teamName)){
-				return team;
-			}
-		}
-		return null;
+	public Team getTeam(Integer userInput) {
+		return teams.get(userInput);
 	}
 }

@@ -31,11 +31,11 @@ public class Manager {
 	// prompts user to choose action, checks if user entered integer
 	private Integer promptAction() throws NumberFormatException, IOException {
 		System.out.printf("There are currently %d registered players.%n", players.length);
-		System.out.println("Your options (choose menu option number):");
+		System.out.println("Your options:");
 		for (Map.Entry<Integer, String> option : menu.entrySet()) {
 			System.out.printf("%d.  %s%n", option.getKey(), option.getValue());
 		}
-		System.out.print("What do you want to do:   ");
+		System.out.print("What do you want to do(choose menu option number):   ");
 		return Integer.parseInt(reader.readLine());
 	}
 
@@ -63,18 +63,20 @@ public class Manager {
 					e.printStackTrace();
 				}
 				break;
-			// Allows for adding players to team up to maximum number of players per team
+			// Allows for adding players to team up to maximum number of players
+			// per team
 			case 2:
 				Team teamAdd;
 				try {
 					teamAdd = promptForTeam();
-					if (teamAdd.getPlayerCount() == Team.MAX_PLAYERS){
+					if (teamAdd.getPlayerCount() == Team.MAX_PLAYERS) {
 						System.out.println("This team has already maximum number of players.");
 						System.out.println("Choose other options.%n");
 					} else {
 						Player player = promptForPlayer(Arrays.asList(players));
 						teamAdd.addPlayer(player);
-						System.out.printf("Player %s %s was added to team %s%n%n", player.getFirstName(), player.getLastName(), teamAdd.getTeamName());
+						System.out.printf("Player %s %s was added to team %s%n%n", player.getFirstName(),
+								player.getLastName(), teamAdd.getTeamName());
 					}
 				} catch (IOException e) {
 					System.out.println("Problem with input");
@@ -84,15 +86,16 @@ public class Manager {
 			// Allows for removing players from teams
 			case 3:
 				Team teamRemove;
-				try{
+				try {
 					teamRemove = promptForTeam();
-					if (teamRemove.getPlayerCount() == 0){
+					if (teamRemove.getPlayerCount() == 0) {
 						System.out.println("This team does not have players.");
-						System.out.println("Choose other options.%n");
+						System.out.println("Choose other options.\n");
 					} else {
 						Player player = promptForPlayer(teamRemove.getPlayers());
 						teamRemove.removePlayer(player);
-						System.out.printf("Player %s %s was added to team %s%n%n", player.getFirstName(), player.getLastName(), teamRemove.getTeamName());
+						System.out.printf("Player %s %s was removed from team %s%n%n", player.getFirstName(),
+								player.getLastName(), teamRemove.getTeamName());
 					}
 				} catch (IOException e) {
 					System.out.println("Problem with input");
@@ -111,26 +114,41 @@ public class Manager {
 
 	// Prompts user to select player and add him to team
 	private Player promptForPlayer(List<Player> players) throws NumberFormatException, IOException {
-		System.out.println("All players:");
+		System.out.println("\nAll players:");
 		int counter = 1;
 		for (Player player : players) {
 			System.out.println(counter + ".)" + player);
 			counter++;
 		}
-		System.out.print("Which player to add (by player number):  ");
+		System.out.print("\nWhich player you want to choose (by player number):  ");
 		return players.get(Integer.parseInt(reader.readLine()) - 1);
 	}
 
-	// Prompts user to select team
+	// Prompts user to select team and checks if input was number
 	private Team promptForTeam() throws IOException {
-		System.out.println("Available teams:");
+		System.out.println("\nAvailable teams:");
 		int counter = 1;
 		for (Team team : season.getTeams()) {
 			System.out.printf("%d.) %s%n", counter, team);
 			counter++;
 		}
-		System.out.print("Your choice (by team name):  ");
-		return season.getTeam(reader.readLine());
+		boolean properInput = false;
+		Integer userInput = 0;
+		// Loop that ensures player input will be number and not lesser or greater then number
+		// of teams added to season
+		do {
+			System.out.print("\nYour choice (by team number):  ");
+			try{
+				userInput = Integer.parseInt(reader.readLine());
+				if (userInput > 0 && userInput <= season.getTeams().size()){
+					properInput = true;
+				}
+			} catch (NumberFormatException e) {
+				System.out.println("Please enter number...");
+				properInput = false;
+			}
+		} while (!properInput);
+		return season.getTeam(userInput - 1);
 	}
 
 	// Asks user about details of team he wants to create
