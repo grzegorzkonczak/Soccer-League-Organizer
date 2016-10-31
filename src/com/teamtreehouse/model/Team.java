@@ -22,6 +22,11 @@ public class Team {
 	public String getCoachName() {
 		return coachName;
 	}
+
+	@Override
+	public String toString() {
+		return "Team " + teamName + " coached by coach " + coachName;
+	}
 	
 	
 }
