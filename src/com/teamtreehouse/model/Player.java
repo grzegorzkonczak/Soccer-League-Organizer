@@ -32,8 +32,16 @@ public class Player implements Comparable<Player>, Serializable {
   public boolean isPreviousExperience() {
     return previousExperience;
   }
+  
+  
 
   @Override
+public String toString() {
+	return "Player " + firstName + " " + lastName + ", heightInInches: " + heightInInches
+			+ ", previousExperience:" + (previousExperience ? " Experienced" : " Fresh");
+}
+
+@Override
   public int compareTo(Player other) {
 	  int lastCmp = lastName.compareTo(other.lastName);
       return (lastCmp != 0 ? lastCmp : firstName.compareTo(other.firstName));

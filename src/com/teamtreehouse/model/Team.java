@@ -27,6 +27,11 @@ public class Team {
 	public String toString() {
 		return "Team " + teamName + " coached by coach " + coachName;
 	}
+
+	public void addPlayer(Player player) {
+		players.add(player);
+		
+	}
 	
 	
 }
