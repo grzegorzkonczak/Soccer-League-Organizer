@@ -1,7 +1,9 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.teamtreehouse.model.Player;
@@ -22,7 +24,8 @@ public class Manager {
 		menu = new HashMap<>();
 		menu.put(1, "Create a new team for this season");
 		menu.put(2, "Add players to team");
-		menu.put(3, "Exit Manager");
+		menu.put(3, "Remove players from team");
+		menu.put(4, "Exit Manager");
 	}
 
 	// prompts user to choose action, checks if user entered integer
@@ -60,31 +63,54 @@ public class Manager {
 					e.printStackTrace();
 				}
 				break;
-			// Allows for adding players to team
+			// Allows for adding players to team up to maximum number of players per team
 			case 2:
-				Team team;
+				Team teamAdd;
 				try {
-					team = promptForTeam();
-					Player player = promptForPlayer();
-					team.addPlayer(player);
-					System.out.printf("Player %s %s was added to team %s%n%n", player.getFirstName(), player.getLastName(), team.getTeamName());
+					teamAdd = promptForTeam();
+					if (teamAdd.getPlayerCount() == Team.MAX_PLAYERS){
+						System.out.println("This team has already maximum number of players.");
+						System.out.println("Choose other options.%n");
+					} else {
+						Player player = promptForPlayer(Arrays.asList(players));
+						teamAdd.addPlayer(player);
+						System.out.printf("Player %s %s was added to team %s%n%n", player.getFirstName(), player.getLastName(), teamAdd.getTeamName());
+					}
+				} catch (IOException e) {
+					System.out.println("Problem with input");
+					e.printStackTrace();
+				}
+				break;
+			// Allows for removing players from teams
+			case 3:
+				Team teamRemove;
+				try{
+					teamRemove = promptForTeam();
+					if (teamRemove.getPlayerCount() == 0){
+						System.out.println("This team does not have players.");
+						System.out.println("Choose other options.%n");
+					} else {
+						Player player = promptForPlayer(teamRemove.getPlayers());
+						teamRemove.removePlayer(player);
+						System.out.printf("Player %s %s was added to team %s%n%n", player.getFirstName(), player.getLastName(), teamRemove.getTeamName());
+					}
 				} catch (IOException e) {
 					System.out.println("Problem with input");
 					e.printStackTrace();
 				}
 				break;
 			// Exits the program
-			case 3:
+			case 4:
 				System.out.println("Thank you for using Soccer League Organizer");
 				break;
 			default:
 				System.out.println("Unknown choice... Try again.%n%n%n");
 			}
-		} while (choice != 3);
+		} while (choice != 4);
 	}
 
 	// Prompts user to select player and add him to team
-	private Player promptForPlayer() throws NumberFormatException, IOException {
+	private Player promptForPlayer(List<Player> players) throws NumberFormatException, IOException {
 		System.out.println("All players:");
 		int counter = 1;
 		for (Player player : players) {
@@ -92,7 +118,7 @@ public class Manager {
 			counter++;
 		}
 		System.out.print("Which player to add (by player number):  ");
-		return players[Integer.parseInt(reader.readLine()) - 1];
+		return players.get(Integer.parseInt(reader.readLine()) - 1);
 	}
 
 	// Prompts user to select team
