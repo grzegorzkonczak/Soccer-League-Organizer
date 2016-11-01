@@ -39,7 +39,6 @@ public class Manager {
 
 	// prompts user to choose action, checks if user entered integer
 	private Integer promptAction() throws NumberFormatException, IOException {
-		System.out.printf("There are currently %d registered players.%n", players.length);
 		System.out.println("Your options:");
 		for (Map.Entry<Integer, String> option : menu.entrySet()) {
 			System.out.printf("%d.  %s%n", option.getKey(), option.getValue());
@@ -83,11 +82,21 @@ public class Manager {
 				Team teamAdd;
 				try {
 					teamAdd = promptForTeam();
+					
+					// Check if team does not have maximum players
 					if (teamAdd.getPlayerCount() == Team.MAX_PLAYERS) {
 						System.out.println("This team has already maximum number of players.");
 						System.out.println("Choose other options.%n");
 					} else {
-						Player player = promptForPlayer(Arrays.asList(players));
+						
+						// List only players that are not already in team
+						List<Player> availablePlayers = new ArrayList<>(Arrays.asList(players));
+						for (Team team : season.getTeams()){
+							availablePlayers.removeAll(team.getPlayers());
+						}
+						Player player = promptForPlayer(availablePlayers);
+						
+						// Add player to team
 						teamAdd.addPlayer(player);
 						System.out.printf("Player %s %s was added to team %s%n%n", player.getFirstName(),
 								player.getLastName(), teamAdd.getTeamName());
