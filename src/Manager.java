@@ -30,9 +30,9 @@ public class Manager {
 		menu.put(1, "Create a new team for this season");
 		menu.put(2, "Add players to team");
 		menu.put(3, "Remove players from team");
-		menu.put(4, "Display height report");
+		menu.put(4, "Display Team report");
 		menu.put(5, "Display League Balance Report");
-		menu.put(6, "Print out team rooster");
+		menu.put(6, "Print out Team rooster");
 		menu.put(7, "Exit Manager");
 		maxTeams = players.length / 11;
 	}
@@ -82,20 +82,20 @@ public class Manager {
 				Team teamAdd;
 				try {
 					teamAdd = promptForTeam();
-					
+
 					// Check if team does not have maximum players
 					if (teamAdd.getPlayerCount() == Team.MAX_PLAYERS) {
 						System.out.println("This team has already maximum number of players.");
 						System.out.println("Choose other options.%n");
 					} else {
-						
+
 						// List only players that are not already in team
 						List<Player> availablePlayers = new ArrayList<>(Arrays.asList(players));
-						for (Team team : season.getTeams()){
+						for (Team team : season.getTeams()) {
 							availablePlayers.removeAll(team.getPlayers());
 						}
 						Player player = promptForPlayer(availablePlayers);
-						
+
 						// Add player to team
 						teamAdd.addPlayer(player);
 						System.out.printf("Player %s %s was added to team %s%n%n", player.getFirstName(),
@@ -125,10 +125,11 @@ public class Manager {
 					e.printStackTrace();
 				}
 				break;
-			// displays height report about players in selected team
+			// displays team report (height/experience) about players in
+			// selected team
 			case 4:
 				try {
-					displayHeightReport();
+					displayTeamReport();
 				} catch (IOException e) {
 					System.out.println("Problem with input");
 					e.printStackTrace();
@@ -256,18 +257,63 @@ public class Manager {
 	}
 
 	// Displays report for players grouped by height
-	private void displayHeightReport() throws IOException {
+	private void displayTeamReport() throws IOException {
 		Team team = promptForTeam();
-		System.out.printf("\nHeight Report for %s:\n", team);
+		System.out.printf("\nTeam Report for %s:\n\n", team);
+
+		// Create height portion of report
 		Map<String, List<Player>> playersByHeight = createPlayersByHeightMap(team);
 		for (Map.Entry<String, List<Player>> entry : playersByHeight.entrySet()) {
 			System.out.printf("Players in range %s:\n", entry.getKey());
 			for (Player player : entry.getValue()) {
 				System.out.printf("%s %s\n", player.getFirstName(), player.getLastName());
 			}
-			System.out.println();
+			System.out.printf("Total players in that range: %d\n\n", entry.getValue().size());
 		}
 
+		// Create experience portion of report
+		Map<Boolean, List<Player>> playerByExperience = createPlayersByExperienceMap(team);
+		System.out.printf("Experience of players in team:\n");
+		int hasExperience = 0;
+		int noExperience = 0;
+		if (playerByExperience.get(true) != null) {
+			hasExperience = playerByExperience.get(true).size();
+		}
+		if (playerByExperience.get(false) != null) {
+			noExperience = playerByExperience.get(false).size();
+		}
+		int total = hasExperience + noExperience;
+		double percent = 0.0;
+		if (total != 0) {
+			percent = ((double) hasExperience / (double) total) * 100.0;
+		}
+		System.out.printf("%d player(s) have experience and %d player(s) has no experience.\n", hasExperience,
+				noExperience);
+		System.out.printf("This means around %.0f%% of players are experienced.\n\n", percent);
+	}
+
+	// Creates map of player lists grouped by experience (key is boolean
+	// representation of player experience)
+	private Map<Boolean, List<Player>> createPlayersByExperienceMap(Team team) {
+		Map<Boolean, List<Player>> playersByExperience = new HashMap<>();
+		for (Player player : team.getPlayers()) {
+			if (player.isPreviousExperience()) {
+				List<Player> players = playersByExperience.get(true);
+				if (players == null) {
+					players = new ArrayList<>();
+					playersByExperience.put(true, players);
+				}
+				players.add(player);
+			} else {
+				List<Player> players = playersByExperience.get(false);
+				if (players == null) {
+					players = new ArrayList<>();
+					playersByExperience.put(false, players);
+				}
+				players.add(player);
+			}
+		}
+		return playersByExperience;
 	}
 
 	// Creates map of player lists grouped by height (key is string
