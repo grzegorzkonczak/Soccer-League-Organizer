@@ -1,12 +1,14 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
@@ -22,20 +24,23 @@ public class Manager {
 	private BufferedReader reader;
 	private Map<Integer, String> menu;
 	private int maxTeams;
+	private Queue<Player> waitlist;
 
 	public Manager(Player[] players, Season season) {
 		this.players = players;
 		this.season = season;
 		reader = new BufferedReader(new InputStreamReader(System.in));
 		menu = new HashMap<>();
+		waitlist = new ArrayDeque<>();
 		menu.put(1, "Create a new team for this season");
 		menu.put(2, "Add players to team");
 		menu.put(3, "Remove players from team");
 		menu.put(4, "Display Team report");
 		menu.put(5, "Display League Balance Report");
 		menu.put(6, "Balance teams");
-		menu.put(7, "Print out Team rooster");
-		menu.put(8, "Exit Manager");
+		menu.put(7, "Add player to waitlist");
+		menu.put(8, "Print out Team rooster");
+		menu.put(9, "Exit Manager");
 		maxTeams = players.length / 11;
 	}
 
@@ -141,17 +146,28 @@ public class Manager {
 			case 5:
 				displayLeagueBalanceReport();
 				break;
-			// Balance teams builded manually
+			// Balance teams builded manually (or creates teams automatically if
+			// no players were added yet)
 			case 6:
-				if (season.getTeams() != null){
+				if (season.getTeams() != null) {
 					balanceTeams();
 					System.out.println("\nTeams have been balanced!");
 				} else {
 					System.out.println("\nPlease first add teams to season...");
 				}
 				break;
-			// Prints team rooster
+			// Adds player to waitlist
 			case 7:
+				try {
+					waitlist.add(promptForNewPlayer());
+					System.out.println("\nPlayer added to waitlist!");
+				} catch (IOException e) {
+					System.out.println("Problem with input");
+					e.printStackTrace();
+				}
+				break;
+			// Prints team rooster
+			case 8:
 				Team teamPrint;
 				try {
 					teamPrint = promptForTeam();
@@ -163,13 +179,35 @@ public class Manager {
 				}
 				break;
 			// Exits the program
-			case 8:
+			case 9:
 				System.out.println("Thank you for using Soccer League Organizer");
 				break;
 			default:
 				System.out.printf("Unknown choice... Try again.%n%n%n");
 			}
-		} while (choice != 7 || choice != 8);
+		} while (choice != 8 || choice != 9);
+	}
+
+	// Prompts for new player data and returns new player
+	private Player promptForNewPlayer() throws IOException {
+		System.out.print("Enter player first name:  \n");
+		String firstName = reader.readLine();
+		System.out.println("Enter player last name:  \n");
+		String lastName = reader.readLine();
+		System.out.println("Enter player height in inches:  \n");
+		boolean properInputFormat = false;
+		int height = 0;
+		do {
+			try {
+				height = Integer.parseInt(reader.readLine());
+				properInputFormat = true;
+			} catch (NumberFormatException e) {
+				System.out.println("/nPlease enter integer...");
+			}
+		} while (properInputFormat);
+		System.out.println("Does player have experience (true/false):  \n");
+		boolean exp = Boolean.parseBoolean(reader.readLine());
+		return new Player(firstName, lastName, height, exp);
 	}
 
 	// Balances teams by trying to minimize score difference
@@ -180,16 +218,14 @@ public class Manager {
 
 		// Starts process of balancing until all teams are fully and balanced
 		while (!isTeamsBalanced) {
-			int totalScore = 0;
+
 			int lowestScore = 50;
 			int highestScore = 0;
 			Team best = null;
-			;
 			Team worst = null;
 
-			// Extract highest, lowest and average score
+			// Extract highest and lowest
 			for (Team team : teamsScores.keySet()) {
-				totalScore += teamsScores.get(team);
 				if (teamsScores.get(team) > highestScore) {
 					highestScore = teamsScores.get(team);
 					best = team;
@@ -199,7 +235,6 @@ public class Manager {
 					worst = team;
 				}
 			}
-			int averageScore = totalScore / season.getTeams().size();
 
 			// Extract good player from best team and bad player from worst team
 			// then switch
@@ -257,7 +292,7 @@ public class Manager {
 			// Switch good and bad player
 			best.addPlayer(badTransfer);
 			worst.addPlayer(goodTransfer);
-			
+
 			// Re-check team scores and balance
 			teamsScores = createTeamScoresMap();
 			isTeamsBalanced = chceckBalance(teamsScores);
