@@ -172,95 +172,25 @@ public class Manager {
 
 	}
 
-	// Displays experience report for all teams in league
+	// Displays full report for all teams in league
 	private void displayLeagueBalanceReport() {
-		Map<Team, Map<Boolean, List<Player>>> teamsExperience = createExperienceMap();
-		System.out.println("\nLeague Balance Report:\n");
-		for (Map.Entry<Team, Map<Boolean, List<Player>>> entry : teamsExperience.entrySet()) {
-			System.out.printf("Experience of players in %s:\n", entry.getKey());
-			int hasExperience = 0;
-			int noExperience = 0;
-			if (entry.getValue().get(true) != null) {
-				hasExperience = entry.getValue().get(true).size();
-			}
-			if (entry.getValue().get(false) != null) {
-				noExperience = entry.getValue().get(false).size();
-			}
-			int total = hasExperience + noExperience;
-			double percent = 0.0;
-			if (total != 0) {
-				percent = ((double) hasExperience / (double) total) * 100.0;
-			}
-			System.out.printf("%d player(s) have experience and %d player(s) has no experience.\n", hasExperience,
-					noExperience);
-			System.out.printf("This means around %.0f%% of players are experienced.\n\n", percent);
-		}
-
-	}
-
-	// Creates map of teams mapped to another map that groups players by
-	// previous experience
-	private Map<Team, Map<Boolean, List<Player>>> createExperienceMap() {
-		Map<Team, Map<Boolean, List<Player>>> teamsExperience = new HashMap<>();
-		for (Team team : season.getTeams()) {
-			for (Player player : team.getPlayers()) {
-
-				// Add player with experience if there is entry in map and list
-				// of players
-				// If no entry in outer map create new map and list then add
-				// entries to maps
-				// If no entry in inner map create new list of players and add
-				// entry to map
-				if (player.isPreviousExperience()) {
-					List<Player> players;
-					Map<Boolean, List<Player>> map = teamsExperience.get(team);
-					if (map == null) {
-						players = new ArrayList<>();
-						map = new HashMap<>();
-						map.put(true, players);
-						teamsExperience.put(team, map);
-					} else {
-						players = teamsExperience.get(team).get(true);
-						if (players == null) {
-							players = new ArrayList<>();
-							map.put(true, players);
-						}
-					}
-					players.add(player);
-
-					// Add player without experience if there is entry in map
-					// and list of players
-					// If no entry in outer map create new map and list then add
-					// entries to maps
-					// If no entry in inner map create new list of players and
-					// add entry to map
-				} else {
-					List<Player> players;
-					Map<Boolean, List<Player>> map = teamsExperience.get(team);
-					if (map == null) {
-						players = new ArrayList<>();
-						map = new HashMap<>();
-						map.put(false, players);
-						teamsExperience.put(team, map);
-					} else {
-						players = teamsExperience.get(team).get(false);
-						if (players == null) {
-							players = new ArrayList<>();
-							map.put(false, players);
-						}
-					}
-					players.add(player);
-				}
+		for(Team team : season.getTeams()){
+			Map<Boolean, List<Player>> playerByExperience = createPlayersByExperienceMap(team);
+			Map<String, List<Player>> playersByHeight = createPlayersByHeightMap(team);
+			displayExperience(playerByExperience, team);
+			System.out.println("Players by height:");
+			for (Map.Entry<String, List<Player>> entry : playersByHeight.entrySet()) {
+				System.out.printf("Total players in range %s: %d\n",entry.getKey(), entry.getValue().size());
 			}
 		}
-		return teamsExperience;
 	}
+
 
 	// Displays report for players grouped by height
 	private void displayTeamReport() throws IOException {
 		Team team = promptForTeam();
 		System.out.printf("\nTeam Report for %s:\n\n", team);
-
+		System.out.println("Players by height:");
 		// Create height portion of report
 		Map<String, List<Player>> playersByHeight = createPlayersByHeightMap(team);
 		for (Map.Entry<String, List<Player>> entry : playersByHeight.entrySet()) {
@@ -273,7 +203,11 @@ public class Manager {
 
 		// Create experience portion of report
 		Map<Boolean, List<Player>> playerByExperience = createPlayersByExperienceMap(team);
-		System.out.printf("Experience of players in team:\n");
+		displayExperience(playerByExperience, team);
+	}
+
+	// Outputs experience portion of report
+	private void displayExperience(Map<Boolean, List<Player>> playerByExperience, Team team) {
 		int hasExperience = 0;
 		int noExperience = 0;
 		if (playerByExperience.get(true) != null) {
@@ -287,6 +221,7 @@ public class Manager {
 		if (total != 0) {
 			percent = ((double) hasExperience / (double) total) * 100.0;
 		}
+		System.out.printf("\nExperience of players in team %s:\n", team);
 		System.out.printf("%d player(s) have experience and %d player(s) has no experience.\n", hasExperience,
 				noExperience);
 		System.out.printf("This means around %.0f%% of players are experienced.\n\n", percent);
