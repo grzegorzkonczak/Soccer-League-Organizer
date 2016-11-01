@@ -20,6 +20,7 @@ public class Manager {
 	private Season season;
 	private BufferedReader reader;
 	private Map<Integer, String> menu;
+	private int maxTeams;
 
 	public Manager(Player[] players, Season season) {
 		this.players = players;
@@ -33,6 +34,7 @@ public class Manager {
 		menu.put(5, "Display League Balance Report");
 		menu.put(6, "Print out team rooster");
 		menu.put(7, "Exit Manager");
+		maxTeams = players.length / 11;
 	}
 
 	// prompts user to choose action, checks if user entered integer
@@ -62,9 +64,14 @@ public class Manager {
 			// Creates new team and adds it to season
 			case 1:
 				try {
-					Team team = promptForNewTeam();
-					season.addTeam(team);
-					System.out.printf("%s added!%n%n", team);
+					if (season.getTeams().size() == maxTeams) {
+						System.out.println("\nMaximum number of Teams already in League.");
+						System.out.println("Choose other option.\n\n");
+					} else {
+						Team team = promptForNewTeam();
+						season.addTeam(team);
+						System.out.printf("%s added!%n%n", team);
+					}
 				} catch (IOException e) {
 					System.out.println("Problem with input");
 					e.printStackTrace();
