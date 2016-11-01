@@ -31,7 +31,8 @@ public class Manager {
 		menu.put(3, "Remove players from team");
 		menu.put(4, "Display height report");
 		menu.put(5, "Display League Balance Report");
-		menu.put(6, "Exit Manager");
+		menu.put(6, "Print out team rooster");
+		menu.put(7, "Exit Manager");
 	}
 
 	// prompts user to choose action, checks if user entered integer
@@ -121,14 +122,37 @@ public class Manager {
 			case 5:
 				displayLeagueBalanceReport();
 				break;
-			// Exits the program
+			// Prints team rooster
 			case 6:
+				Team teamPrint;
+				try {
+					teamPrint = promptForTeam();
+					printRooster(teamPrint);
+				} catch (IOException e) {
+					System.out.println("Problem with input");
+					e.printStackTrace();
+				}
+				break;
+			// Exits the program
+			case 7:
 				System.out.println("Thank you for using Soccer League Organizer");
 				break;
 			default:
 				System.out.printf("Unknown choice... Try again.%n%n%n");
 			}
-		} while (choice != 6);
+		} while (choice != 7);
+	}
+
+	// Prints teams rooster for coach
+	private void printRooster(Team team) {
+		System.out.printf("\nYour team (%s) rooster coach %s:\n",team.getTeamName(), team.getCoachName());
+		int counter = 1;
+		for (Player player : team.getPlayers()){
+			System.out.println(counter + ".) " + player);
+			counter++;
+		}
+		System.out.println();
+		
 	}
 
 	// Displays experience report for all teams in league
@@ -183,6 +207,7 @@ public class Manager {
 					}
 					players.add(player);
 					
+				// Add player without experience if there is entry in map and list of players
 				// If no entry in outer map create new map and list then add entries to maps
 				// If no entry in inner map create new list of players and add entry to map
 				} else {
