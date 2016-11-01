@@ -19,15 +19,15 @@ import com.teamtreehouse.model.Team;
 
 public class Manager {
 
-	private Player[] players;
+	private List<Player> players;
 	private Season season;
 	private BufferedReader reader;
 	private Map<Integer, String> menu;
 	private int maxTeams;
 	private Queue<Player> waitlist;
 
-	public Manager(Player[] players, Season season) {
-		this.players = players;
+	public Manager(List<Player> players, Season season) {
+		this.players = new ArrayList<>(players);
 		this.season = season;
 		reader = new BufferedReader(new InputStreamReader(System.in));
 		menu = new HashMap<>();
@@ -39,9 +39,10 @@ public class Manager {
 		menu.put(5, "Display League Balance Report");
 		menu.put(6, "Balance teams");
 		menu.put(7, "Add player to waitlist");
-		menu.put(8, "Print out Team rooster");
-		menu.put(9, "Exit Manager");
-		maxTeams = players.length / 11;
+		menu.put(8, "Remove player from league");
+		menu.put(9, "Print out Team rooster");
+		menu.put(10, "Exit Manager");
+		maxTeams = players.size() / 11;
 	}
 
 	// prompts user to choose action, checks if user entered integer
@@ -97,7 +98,7 @@ public class Manager {
 					} else {
 
 						// List only players that are not already in team
-						List<Player> availablePlayers = new ArrayList<>(Arrays.asList(players));
+						List<Player> availablePlayers = new ArrayList<>(players);
 						for (Team team : season.getTeams()) {
 							availablePlayers.removeAll(team.getPlayers());
 						}
@@ -166,35 +167,54 @@ public class Manager {
 					e.printStackTrace();
 				}
 				break;
-			// Prints team rooster
+			// Removes player from league and if any players are on waitlist adds first of them to league
 			case 8:
+				try {
+					Player player = promptForPlayer(players);
+					players.remove(player);
+					System.out.println("\nPlayer removed");
+					if (!waitlist.isEmpty()){
+						players.add(waitlist.poll());
+						System.out.println("Player from waitlist added to league");
+					}
+				} catch (IOException e1) {
+					System.out.println("Problem with input");
+					e1.printStackTrace();
+				}
+				break;
+			// Prints team rooster
+			case 9:
 				Team teamPrint;
 				try {
-					teamPrint = promptForTeam();
-					printRooster(teamPrint);
-					System.out.println("Thank you for using Soccer League Organizer");
+					if (season.getTeams() != null){
+						teamPrint = promptForTeam();
+						printRooster(teamPrint);
+						System.out.println("Thank you for using Soccer League Organizer");
+					} else {
+						System.out.println("No teams in league. Thank you for using Soccer League Organizer");
+					}
 				} catch (IOException e) {
 					System.out.println("Problem with input");
 					e.printStackTrace();
 				}
 				break;
 			// Exits the program
-			case 9:
+			case 10:
 				System.out.println("Thank you for using Soccer League Organizer");
 				break;
 			default:
 				System.out.printf("Unknown choice... Try again.%n%n%n");
 			}
-		} while (choice != 8 || choice != 9);
+		} while (choice != 9 && choice != 10);
 	}
 
 	// Prompts for new player data and returns new player
 	private Player promptForNewPlayer() throws IOException {
 		System.out.print("Enter player first name:  \n");
 		String firstName = reader.readLine();
-		System.out.println("Enter player last name:  \n");
+		System.out.print("Enter player last name:  \n");
 		String lastName = reader.readLine();
-		System.out.println("Enter player height in inches:  \n");
+		System.out.print("Enter player height in inches:  \n");
 		boolean properInputFormat = false;
 		int height = 0;
 		do {
@@ -202,10 +222,10 @@ public class Manager {
 				height = Integer.parseInt(reader.readLine());
 				properInputFormat = true;
 			} catch (NumberFormatException e) {
-				System.out.println("/nPlease enter integer...");
+				System.out.println("\nPlease enter integer...");
 			}
-		} while (properInputFormat);
-		System.out.println("Does player have experience (true/false):  \n");
+		} while (!properInputFormat);
+		System.out.print("Does player have experience (true/false):  \n");
 		boolean exp = Boolean.parseBoolean(reader.readLine());
 		return new Player(firstName, lastName, height, exp);
 	}
@@ -312,7 +332,7 @@ public class Manager {
 	// adds player to team
 	private void addPlayer(Team team) {
 		Random random = new Random();
-		List<Player> availablePlayers = new ArrayList<>(Arrays.asList(players));
+		List<Player> availablePlayers = new ArrayList<>(players);
 		for (Team teamB : season.getTeams()) {
 			availablePlayers.removeAll(teamB.getPlayers());
 		}
