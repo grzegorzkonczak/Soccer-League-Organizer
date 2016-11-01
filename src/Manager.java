@@ -145,6 +145,7 @@ public class Manager {
 				try {
 					teamPrint = promptForTeam();
 					printRooster(teamPrint);
+					System.out.println("Thank you for using Soccer League Organizer");
 				} catch (IOException e) {
 					System.out.println("Problem with input");
 					e.printStackTrace();
@@ -157,7 +158,7 @@ public class Manager {
 			default:
 				System.out.printf("Unknown choice... Try again.%n%n%n");
 			}
-		} while (choice != 7);
+		} while (choice != 7 || choice != 6);
 	}
 
 	// Prints teams rooster for coach
