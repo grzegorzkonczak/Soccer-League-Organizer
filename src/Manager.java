@@ -145,14 +145,14 @@ public class Manager {
 
 	// Prints teams rooster for coach
 	private void printRooster(Team team) {
-		System.out.printf("\nYour team (%s) rooster coach %s:\n",team.getTeamName(), team.getCoachName());
+		System.out.printf("\nYour team (%s) rooster coach %s:\n", team.getTeamName(), team.getCoachName());
 		int counter = 1;
-		for (Player player : team.getPlayers()){
+		for (Player player : team.getPlayers()) {
 			System.out.println(counter + ".) " + player);
 			counter++;
 		}
 		System.out.println();
-		
+
 	}
 
 	// Displays experience report for all teams in league
@@ -163,18 +163,19 @@ public class Manager {
 			System.out.printf("Experience of players in %s:\n", entry.getKey());
 			int hasExperience = 0;
 			int noExperience = 0;
-			if (entry.getValue().get(true) != null){
+			if (entry.getValue().get(true) != null) {
 				hasExperience = entry.getValue().get(true).size();
 			}
-			if (entry.getValue().get(false) != null){
+			if (entry.getValue().get(false) != null) {
 				noExperience = entry.getValue().get(false).size();
 			}
 			int total = hasExperience + noExperience;
 			double percent = 0.0;
-			if (total != 0){
-				percent = ((double) hasExperience / (double)total) * 100.0;
+			if (total != 0) {
+				percent = ((double) hasExperience / (double) total) * 100.0;
 			}
-			System.out.printf("%d player(s) have experience and %d player(s) has no experience.\n", hasExperience, noExperience);
+			System.out.printf("%d player(s) have experience and %d player(s) has no experience.\n", hasExperience,
+					noExperience);
 			System.out.printf("This means around %.0f%% of players are experienced.\n\n", percent);
 		}
 
@@ -186,10 +187,13 @@ public class Manager {
 		Map<Team, Map<Boolean, List<Player>>> teamsExperience = new HashMap<>();
 		for (Team team : season.getTeams()) {
 			for (Player player : team.getPlayers()) {
-				
-				// Add player with experience if there is entry in map and list of players
-				// If no entry in outer map create new map and list then add entries to maps
-				// If no entry in inner map create new list of players and add entry to map
+
+				// Add player with experience if there is entry in map and list
+				// of players
+				// If no entry in outer map create new map and list then add
+				// entries to maps
+				// If no entry in inner map create new list of players and add
+				// entry to map
 				if (player.isPreviousExperience()) {
 					List<Player> players;
 					Map<Boolean, List<Player>> map = teamsExperience.get(team);
@@ -200,16 +204,19 @@ public class Manager {
 						teamsExperience.put(team, map);
 					} else {
 						players = teamsExperience.get(team).get(true);
-						if (players == null){
+						if (players == null) {
 							players = new ArrayList<>();
 							map.put(true, players);
 						}
 					}
 					players.add(player);
-					
-				// Add player without experience if there is entry in map and list of players
-				// If no entry in outer map create new map and list then add entries to maps
-				// If no entry in inner map create new list of players and add entry to map
+
+					// Add player without experience if there is entry in map
+					// and list of players
+					// If no entry in outer map create new map and list then add
+					// entries to maps
+					// If no entry in inner map create new list of players and
+					// add entry to map
 				} else {
 					List<Player> players;
 					Map<Boolean, List<Player>> map = teamsExperience.get(team);
@@ -220,7 +227,7 @@ public class Manager {
 						teamsExperience.put(team, map);
 					} else {
 						players = teamsExperience.get(team).get(false);
-						if (players == null){
+						if (players == null) {
 							players = new ArrayList<>();
 							map.put(false, players);
 						}
@@ -278,7 +285,7 @@ public class Manager {
 		return playersByHeight;
 	}
 
-	// Prompts user to select player and add him to team
+	// Prompts user to select player
 	private Player promptForPlayer(List<Player> players) throws NumberFormatException, IOException {
 		Collections.sort(players);
 		System.out.println("\nAll players:");
@@ -287,8 +294,9 @@ public class Manager {
 			System.out.println(counter + ".)" + player);
 			counter++;
 		}
-		System.out.print("\nWhich player you want to choose (by player number):  ");
-		return players.get(Integer.parseInt(reader.readLine()) - 1);
+		Integer userInput = checkUserInput(0, players.size(),
+				"\nWhich player you want to choose (by player number):  ");
+		return players.get(userInput - 1);
 	}
 
 	// Prompts user to select team and checks if input was number
@@ -301,24 +309,30 @@ public class Manager {
 			System.out.printf("%d.) %s%n", counter, team);
 			counter++;
 		}
+		Integer userInput = checkUserInput(0, season.getTeams().size(), "\nYour choice (by team number):  ");
+		return season.getTeam(userInput - 1);
+	}
+
+	// Loops to ensure player input will be number and not lesser or
+	// greater then specified
+	private Integer checkUserInput(int min, int max, String text) throws IOException {
+		System.out.print(text + "  ");
 		boolean properInput = false;
 		Integer userInput = 0;
-		// Loop that ensures player input will be number and not lesser or
-		// greater then number
-		// of teams added to season
 		do {
-			System.out.print("\nYour choice (by team number):  ");
 			try {
 				userInput = Integer.parseInt(reader.readLine());
-				if (userInput > 0 && userInput <= season.getTeams().size()) {
+				if (userInput > min && userInput <= max) {
 					properInput = true;
+				} else {
+					System.out.println("Please enter number between " + (min + 1) + " and " + (max));
 				}
 			} catch (NumberFormatException e) {
-				System.out.println("Please enter number...");
+				System.out.println("Please enter number between " + (min + 1) + " and " + (max));
 				properInput = false;
 			}
 		} while (!properInput);
-		return season.getTeam(userInput - 1);
+		return userInput;
 	}
 
 	// Asks user about details of team he wants to create
