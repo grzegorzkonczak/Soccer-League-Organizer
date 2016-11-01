@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -32,14 +33,15 @@ public class Manager {
 		menu.put(3, "Remove players from team");
 		menu.put(4, "Display Team report");
 		menu.put(5, "Display League Balance Report");
-		menu.put(6, "Print out Team rooster");
-		menu.put(7, "Exit Manager");
+		menu.put(6, "Balance teams");
+		menu.put(7, "Print out Team rooster");
+		menu.put(8, "Exit Manager");
 		maxTeams = players.length / 11;
 	}
 
 	// prompts user to choose action, checks if user entered integer
 	private Integer promptAction() throws NumberFormatException, IOException {
-		System.out.println("Your options:");
+		System.out.println("\nYour options:");
 		for (Map.Entry<Integer, String> option : menu.entrySet()) {
 			System.out.printf("%d.  %s%n", option.getKey(), option.getValue());
 		}
@@ -139,8 +141,17 @@ public class Manager {
 			case 5:
 				displayLeagueBalanceReport();
 				break;
-			// Prints team rooster
+			// Balance teams builded manually
 			case 6:
+				if (season.getTeams() != null){
+					balanceTeams();
+					System.out.println("\nTeams have been balanced!");
+				} else {
+					System.out.println("\nPlease first add teams to season...");
+				}
+				break;
+			// Prints team rooster
+			case 7:
 				Team teamPrint;
 				try {
 					teamPrint = promptForTeam();
@@ -152,13 +163,162 @@ public class Manager {
 				}
 				break;
 			// Exits the program
-			case 7:
+			case 8:
 				System.out.println("Thank you for using Soccer League Organizer");
 				break;
 			default:
 				System.out.printf("Unknown choice... Try again.%n%n%n");
 			}
-		} while (choice != 7 || choice != 6);
+		} while (choice != 7 || choice != 8);
+	}
+
+	// Balances teams by trying to minimize score difference
+	private void balanceTeams() {
+		populateTeams();
+		Map<Team, Integer> teamsScores = createTeamScoresMap();
+		Boolean isTeamsBalanced = chceckBalance(teamsScores);
+
+		// Starts process of balancing until all teams are fully and balanced
+		while (!isTeamsBalanced) {
+			int totalScore = 0;
+			int lowestScore = 50;
+			int highestScore = 0;
+			Team best = null;
+			;
+			Team worst = null;
+
+			// Extract highest, lowest and average score
+			for (Team team : teamsScores.keySet()) {
+				totalScore += teamsScores.get(team);
+				if (teamsScores.get(team) > highestScore) {
+					highestScore = teamsScores.get(team);
+					best = team;
+				}
+				if (teamsScores.get(team) < lowestScore) {
+					lowestScore = teamsScores.get(team);
+					worst = team;
+				}
+			}
+			int averageScore = totalScore / season.getTeams().size();
+
+			// Extract good player from best team and bad player from worst team
+			// then switch
+			Player bestPlayer = null;
+			Player goodPlayer = null;
+			Player averageGoodPlayer = null;
+			Player worstPlayer = null;
+			Player badPlayer = null;
+			Player averageBadPlayer = null;
+			Player goodTransfer = null;
+			Player badTransfer = null;
+
+			// select best possible player for transfer
+			for (Player player : best.getPlayers()) {
+				if (player.isPreviousExperience() && player.getHeightInInches() > 46) {
+					bestPlayer = player;
+				} else if (player.isPreviousExperience()) {
+					goodPlayer = player;
+				} else if (player.getHeightInInches() > 40) {
+					averageGoodPlayer = player;
+				}
+			}
+
+			// Remove the best possible player from team and store it in
+			// variable
+			if (bestPlayer != null) {
+				goodTransfer = best.removePlayer(bestPlayer);
+			} else if (bestPlayer == null && goodPlayer != null) {
+				goodTransfer = best.removePlayer(goodPlayer);
+			} else if (bestPlayer == null && goodPlayer == null && averageGoodPlayer != null) {
+				goodTransfer = best.removePlayer(averageGoodPlayer);
+			}
+
+			// select worst possible player for transfer
+			for (Player player : worst.getPlayers()) {
+				if (!player.isPreviousExperience() && player.getHeightInInches() < 41) {
+					worstPlayer = player;
+				} else if (!player.isPreviousExperience()) {
+					badPlayer = player;
+				} else if (player.getHeightInInches() < 41) {
+					averageBadPlayer = player;
+				}
+			}
+
+			// Remove the worst possible player from team and store it in
+			// variable
+			if (worstPlayer != null) {
+				badTransfer = worst.removePlayer(worstPlayer);
+			} else if (worstPlayer == null && badPlayer != null) {
+				badTransfer = worst.removePlayer(badPlayer);
+			} else if (worstPlayer == null && badPlayer == null && averageBadPlayer != null) {
+				badTransfer = worst.removePlayer(averageBadPlayer);
+			}
+
+			// Switch good and bad player
+			best.addPlayer(badTransfer);
+			worst.addPlayer(goodTransfer);
+			
+			// Re-check team scores and balance
+			teamsScores = createTeamScoresMap();
+			isTeamsBalanced = chceckBalance(teamsScores);
+		}
+	}
+
+	// Adds players to not full teams
+	private void populateTeams() {
+		for (Team team : season.getTeams()) {
+			while (team.getPlayerCount() < Team.MAX_PLAYERS) {
+				addPlayer(team);
+			}
+		}
+
+	}
+
+	// adds player to team
+	private void addPlayer(Team team) {
+		Random random = new Random();
+		List<Player> availablePlayers = new ArrayList<>(Arrays.asList(players));
+		for (Team teamB : season.getTeams()) {
+			availablePlayers.removeAll(teamB.getPlayers());
+		}
+		int playerToAdd = random.nextInt(availablePlayers.size());
+		team.addPlayer(availablePlayers.get(playerToAdd));
+	}
+
+	// Checks if teams are acceptably balanced by comparing their scores
+	private Boolean chceckBalance(Map<Team, Integer> teamsScores) {
+		int totalScore = 0;
+		for (Team team : teamsScores.keySet()) {
+			totalScore += teamsScores.get(team);
+		}
+		int averageScore = totalScore / season.getTeams().size();
+		for (Team team : teamsScores.keySet()) {
+			if (teamsScores.get(team) > averageScore + 1 || teamsScores.get(team) < averageScore - 1) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	// Creates map of teams and assigns each team a score based on height an
+	// experience of its players
+	private Map<Team, Integer> createTeamScoresMap() {
+		Map<Team, Integer> teamScore = new HashMap<>();
+		for (Team team : season.getTeams()) {
+			Integer score = 0;
+			for (Player player : team.getPlayers()) {
+				if (player.isPreviousExperience()) {
+					score += 2;
+				}
+				if (player.getHeightInInches() < 41) {
+					score--;
+				} else if (player.getHeightInInches() > 46) {
+					score++;
+				}
+			}
+			teamScore.put(team, score);
+		}
+		return teamScore;
 	}
 
 	// Prints teams rooster for coach
@@ -175,17 +335,16 @@ public class Manager {
 
 	// Displays full report for all teams in league
 	private void displayLeagueBalanceReport() {
-		for(Team team : season.getTeams()){
+		for (Team team : season.getTeams()) {
 			Map<Boolean, List<Player>> playerByExperience = createPlayersByExperienceMap(team);
 			Map<String, List<Player>> playersByHeight = createPlayersByHeightMap(team);
 			displayExperience(playerByExperience, team);
 			System.out.println("Players by height:");
 			for (Map.Entry<String, List<Player>> entry : playersByHeight.entrySet()) {
-				System.out.printf("Total players in range %s: %d\n",entry.getKey(), entry.getValue().size());
+				System.out.printf("Total players in range %s: %d\n", entry.getKey(), entry.getValue().size());
 			}
 		}
 	}
-
 
 	// Displays report for players grouped by height
 	private void displayTeamReport() throws IOException {

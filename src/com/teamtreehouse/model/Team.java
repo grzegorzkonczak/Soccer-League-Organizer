@@ -45,9 +45,9 @@ public class Team implements Comparable<Team>{
 		return new ArrayList<>(players);
 	}
 
-	public void removePlayer(Player player) {
+	public Player removePlayer(Player player) {
 		players.remove(player);
-		
+		return player;
 	}
 
 	@Override
