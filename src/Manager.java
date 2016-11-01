@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,7 +29,9 @@ public class Manager {
 		menu.put(1, "Create a new team for this season");
 		menu.put(2, "Add players to team");
 		menu.put(3, "Remove players from team");
-		menu.put(4, "Exit Manager");
+		menu.put(4, "Display height report");
+		menu.put(5, "Display League Balance Report");
+		menu.put(6, "Exit Manager");
 	}
 
 	// prompts user to choose action, checks if user entered integer
@@ -105,14 +108,149 @@ public class Manager {
 					e.printStackTrace();
 				}
 				break;
-			// Exits the program
+			// displays height report about players in selected team
 			case 4:
+				try {
+					displayHeightReport();
+				} catch (IOException e) {
+					System.out.println("Problem with input");
+					e.printStackTrace();
+				}
+				break;
+			// Displays high level report about balance in whole league
+			case 5:
+				displayLeagueBalanceReport();
+				break;
+			// Exits the program
+			case 6:
 				System.out.println("Thank you for using Soccer League Organizer");
 				break;
 			default:
-				System.out.println("Unknown choice... Try again.%n%n%n");
+				System.out.printf("Unknown choice... Try again.%n%n%n");
 			}
-		} while (choice != 4);
+		} while (choice != 6);
+	}
+
+	// Displays experience report for all teams in league
+	private void displayLeagueBalanceReport() {
+		Map<Team, Map<Boolean, List<Player>>> teamsExperience = createExperienceMap();
+		System.out.println("\nLeague Balance Report:\n");
+		for (Map.Entry<Team, Map<Boolean, List<Player>>> entry : teamsExperience.entrySet()) {
+			System.out.printf("Experience of players in %s:\n", entry.getKey());
+			int hasExperience = 0;
+			int noExperience = 0;
+			if (entry.getValue().get(true) != null){
+				hasExperience = entry.getValue().get(true).size();
+			}
+			if (entry.getValue().get(false) != null){
+				noExperience = entry.getValue().get(false).size();
+			}
+			int total = hasExperience + noExperience;
+			double percent = 0.0;
+			if (total != 0){
+				percent = ((double) hasExperience / (double)total) * 100.0;
+			}
+			System.out.printf("%d player(s) have experience and %d player(s) has no experience.\n", hasExperience, noExperience);
+			System.out.printf("This means around %.0f%% of players are experienced.\n\n", percent);
+		}
+
+	}
+
+	// Creates map of teams mapped to another map that groups players by
+	// previous experience
+	private Map<Team, Map<Boolean, List<Player>>> createExperienceMap() {
+		Map<Team, Map<Boolean, List<Player>>> teamsExperience = new HashMap<>();
+		for (Team team : season.getTeams()) {
+			for (Player player : team.getPlayers()) {
+				
+				// Add player with experience if there is entry in map and list of players
+				// If no entry in outer map create new map and list then add entries to maps
+				// If no entry in inner map create new list of players and add entry to map
+				if (player.isPreviousExperience()) {
+					List<Player> players;
+					Map<Boolean, List<Player>> map = teamsExperience.get(team);
+					if (map == null) {
+						players = new ArrayList<>();
+						map = new HashMap<>();
+						map.put(true, players);
+						teamsExperience.put(team, map);
+					} else {
+						players = teamsExperience.get(team).get(true);
+						if (players == null){
+							players = new ArrayList<>();
+							map.put(true, players);
+						}
+					}
+					players.add(player);
+					
+				// If no entry in outer map create new map and list then add entries to maps
+				// If no entry in inner map create new list of players and add entry to map
+				} else {
+					List<Player> players;
+					Map<Boolean, List<Player>> map = teamsExperience.get(team);
+					if (map == null) {
+						players = new ArrayList<>();
+						map = new HashMap<>();
+						map.put(false, players);
+						teamsExperience.put(team, map);
+					} else {
+						players = teamsExperience.get(team).get(false);
+						if (players == null){
+							players = new ArrayList<>();
+							map.put(false, players);
+						}
+					}
+					players.add(player);
+				}
+			}
+		}
+		return teamsExperience;
+	}
+
+	// Displays report for players grouped by height
+	private void displayHeightReport() throws IOException {
+		Team team = promptForTeam();
+		System.out.printf("\nHeight Report for %s:\n", team);
+		Map<String, List<Player>> playersByHeight = createPlayersByHeightMap(team);
+		for (Map.Entry<String, List<Player>> entry : playersByHeight.entrySet()) {
+			System.out.printf("Players in range %s:\n", entry.getKey());
+			for (Player player : entry.getValue()) {
+				System.out.printf("%s %s\n", player.getFirstName(), player.getLastName());
+			}
+			System.out.println();
+		}
+
+	}
+
+	// Creates map of player lists grouped by height (key is string
+	// representation of given range)
+	private Map<String, List<Player>> createPlayersByHeightMap(Team team) {
+		Map<String, List<Player>> playersByHeight = new HashMap<>();
+		for (Player player : team.getPlayers()) {
+			if (player.getHeightInInches() >= 35 && player.getHeightInInches() <= 40) {
+				List<Player> players = playersByHeight.get("35 to 40 inch");
+				if (players == null) {
+					players = new ArrayList<>();
+					playersByHeight.put("35 to 40 inch", players);
+				}
+				players.add(player);
+			} else if (player.getHeightInInches() > 40 && player.getHeightInInches() <= 46) {
+				List<Player> players = playersByHeight.get("41 to 46 inch");
+				if (players == null) {
+					players = new ArrayList<>();
+					playersByHeight.put("41 to 46 inch", players);
+				}
+				players.add(player);
+			} else if (player.getHeightInInches() > 46 && player.getHeightInInches() <= 50) {
+				List<Player> players = playersByHeight.get("47 to 50 inch");
+				if (players == null) {
+					players = new ArrayList<>();
+					playersByHeight.put("47 to 50 inch", players);
+				}
+				players.add(player);
+			}
+		}
+		return playersByHeight;
 	}
 
 	// Prompts user to select player and add him to team
@@ -140,13 +278,14 @@ public class Manager {
 		}
 		boolean properInput = false;
 		Integer userInput = 0;
-		// Loop that ensures player input will be number and not lesser or greater then number
+		// Loop that ensures player input will be number and not lesser or
+		// greater then number
 		// of teams added to season
 		do {
 			System.out.print("\nYour choice (by team number):  ");
-			try{
+			try {
 				userInput = Integer.parseInt(reader.readLine());
-				if (userInput > 0 && userInput <= season.getTeams().size()){
+				if (userInput > 0 && userInput <= season.getTeams().size()) {
 					properInput = true;
 				}
 			} catch (NumberFormatException e) {
